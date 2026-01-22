@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WORMHOLE P2P // V2</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root { --neon: #00ff41; --bg: #0d0d0d; --panel: #1a1a1a; }
+        body {
+            background: var(--bg);
+            color: var(--neon);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling during drag */
+        }
+        
+        /* CONTAINER */
+        #interface {
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid #333;
+            padding: 30px;
+            background: var(--panel);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 { margin-top: 0; letter-spacing: 3px; font-size: 1.5rem; border-bottom: 1px solid #333; padding-bottom: 15px;}
+        
+        /* STATUS */
+        .status-dot {
+            height: 10px; width: 10px; background-color: #555;
+            border-radius: 50%; display: inline-block; margin-right: 10px;
+        }
+        .connected { background-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
+        
+        /* HOST PANEL (QR & LINK) */
+        #host-panel { display: none; } /* Hidden until ID generated */
+        
+        #qr-box {
+            background: white;
+            padding: 10px;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        /* FILE DROP ZONE */
+        #drop-zone {
+            border: 2px dashed #444;
+            padding: 40px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: none; /* Hidden until connected */
+            background: rgba(255, 255, 255, 0.02);
+        }
+        #drop-zone:hover { border-color: var(--neon); background: rgba(0, 255, 65, 0.05); }
+
+        /* PROGRESS BAR */
+        #progress-container {
+            width: 100%; background: #333; height: 5px; margin-top: 20px; display: none;
+        }
+        #progress-bar {
+            width: 0%; height: 100%; background: var(--neon); transition: width 0.1s;
+        }
+        
+        /* COPY BUTTON STYLES */
+        .copy-group {
+            display: flex; gap: 5px; justify-content: center; margin-top: 10px;
+        }
+        .link-input {
+            background: #000; color: #0f0; border: 1px solid #333; 
+            padding: 10px; width: 60%; font-family: monospace; font-size: 0.8rem;
+        }
+        .btn-copy {
+            background: #333; color: white; border: 1px solid #555; 
+            padding: 10px; cursor: pointer; font-family: monospace;
+        }
+        .btn-copy:active { background: #555; }
+    </style>
+</head>
+<body>
+
+    <div id="interface">
+        <h1>// WORMHOLE P2P //</h1>
+        
+        <div style="margin-bottom: 20px;">
+            <span id="status-dot" class="status-dot"></span>
+            <span id="status-text">INITIALIZING NODE...</span>
+        </div>
+
+        <div id="host-panel">
+            <div id="qr-box"></div>
+            
+            <p style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">SHARE LINK TO CONNECT:</p>
+            <div class="copy-group">
+                <input type="text" id="link-box" class="link-input" readonly>
+                <button onclick="copyLink()" class="btn-copy">COPY</button>
+            </div>
+        </div>
+
+        <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <p id="drop-text">DRAG FILE HERE OR TAP TO UPLOAD</p>
+            <input type="file" id="file-input" style="display: none;">
+        </div>
+        
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        
+        <p id="speed-display" style="margin-top: 10px; font-size: 0.8rem;"></p>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const peer = new Peer(); // Creates a random ID automatically
+        let conn = null;
+        
+        // DOM Elements
+        const statusText = document.getElementById('status-text');
+        const statusDot = document.getElementById('status-dot');
+        const dropZone = document.getElementById('drop-zone');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+        const hostPanel = document.getElementById('host-panel');
+        const linkBox = document.getElementById('link-box');
+
+        // Check URL for "join" ID (Are we the Client?)
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetId = urlParams.get('join');
+
+        // --- PEERJS EVENTS ---
+        
+        peer.on('open', (id) => {
+            console.log('My Peer ID is: ' + id);
+            
+            if (targetId) {
+                // WE ARE THE CLIENT (PHONE B) -> CONNECT TO HOST
+                statusText.innerText = "CONNECTING TO HOST...";
+                connectToPeer(targetId);
+            } else {
+                // WE ARE THE HOST (PHONE A / PC) -> WAIT FOR CONNECTION
+                statusText.innerText = "WAITING FOR PEER...";
+                hostPanel.style.display = "block"; // Show QR/Link
+                generateConnectionInfo(id);
+            }
+        });
+
+        peer.on('connection', (connection) => {
+            // Incoming connection (We are Host)
+            handleConnection(connection);
+        });
+
+        peer.on('error', (err) => {
+            statusText.innerText = "ERROR: " + err.type;
+            statusText.style.color = "red";
+        });
+
+        // --- CONNECTION LOGIC ---
+
+        function connectToPeer(id) {
+            conn = peer.connect(id);
+            conn.on('open', () => {
+                handleConnection(conn);
+            });
+        }
+
+        function handleConnection(connection) {
+            conn = connection;
+            statusText.innerText = "SECURE TUNNEL ESTABLISHED";
+            statusText.style.color = "var(--neon)";
+            statusDot.classList.add('connected');
+            
+            // Hide connection setup, show file drop
+            hostPanel.style.display = 'none'; 
+            dropZone.style.display = 'block'; 
+
+            // Setup Data Listener
+            conn.on('data', (data) => {
+                handleIncomingData(data);
+            });
+            
+            conn.on('close', () => {
+                statusText.innerText = "CONNECTION LOST";
+                statusText.style.color = "red";
+                statusDot.classList.remove('connected');
+            });
+        }
+
+        // --- UI HELPERS ---
+        function generateConnectionInfo(id) {
+            const link = window.location.href.split('?')[0] + "?join=" + id;
+            
+            // 1. Generate QR
+            const qrContainer = document.getElementById('qr-box');
+            qrContainer.innerHTML = "";
+            new QRCode(qrContainer, {
+                text: link,
+                width: 150,
+                height: 150
+            });
+
+            // 2. Fill Input Box
+            linkBox.value = link;
+        }
+
+        function copyLink() {
+            linkBox.select();
+            linkBox.setSelectionRange(0, 99999); // Mobile compatibility
+            navigator.clipboard.writeText(linkBox.value).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                const originalText = btn.innerText;
+                btn.innerText = "COPIED!";
+                setTimeout(() => btn.innerText = originalText, 2000);
+            });
+        }
+
+        // --- FILE TRANSFER LOGIC (CHUNKING) ---
+        
+        // 1. Sending
+        const fileInput = document.getElementById('file-input');
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file || !conn) return;
+
+            statusText.innerText = "SENDING: " + file.name;
+            progressContainer.style.display = 'block';
+
+            // We chunk the file to avoid WebRTC limits (16KB safe limit)
+            const CHUNK_SIZE = 16384; 
+            const reader = new FileReader();
+            let offset = 0;
+
+            reader.onload = (event) => {
+                if (event.target.result) {
+                    conn.send({
+                        file: file.name,
+                        type: 'data',
+                        data: event.target.result
+                    });
+                    
+                    offset += event.target.result.byteLength;
+                    const percent = (offset / file.size) * 100;
+                    progressBar.style.width = percent + "%";
+
+                    if (offset < file.size) {
+                        readSlice(offset);
+                    } else {
+                        conn.send({ file: file.name, type: 'end' }); // End Signal
+                        statusText.innerText = "TRANSFER COMPLETE";
+                        setTimeout(() => {
+                            progressBar.style.width = "0%";
+                            progressContainer.style.display = 'none';
+                        }, 2000);
+                    }
+                }
+            };
+
+            const readSlice = (o) => {
+                const slice = file.slice(offset, o + CHUNK_SIZE);
+                reader.readAsArrayBuffer(slice);
+            };
+
+            // Start Message
+            conn.send({
+                file: file.name,
+                size: file.size,
+                type: 'start'
+            });
+            
+            readSlice(0);
+        });
+
+        // 2. Receiving
+        let receivedChunks = [];
+        let receivedSize = 0;
+        let totalSize = 0;
+        let currentFileName = "";
+
+        function handleIncomingData(data) {
+            if (data.type === 'start') {
+                // New Transfer
+                receivedChunks = [];
+                receivedSize = 0;
+                totalSize = data.size;
+                currentFileName = data.file;
+                statusText.innerText = "RECEIVING: " + currentFileName;
+                progressContainer.style.display = 'block';
+                
+            } else if (data.type === 'data') {
+                // Incoming Chunk
+                receivedChunks.push(data.data);
+                receivedSize += data.data.byteLength;
+                
+                const percent = (receivedSize / totalSize) * 100;
+                progressBar.style.width = percent + "%";
+                
+            } else if (data.type === 'end') {
+                // Transfer Done
+                statusText.innerText = "SAVING FILE...";
+                const blob = new Blob(receivedChunks);
+                const url = URL.createObjectURL(blob);
+                
+                // Auto-Download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a); // Cleanup
+                
+                // Reset UI
+                receivedChunks = [];
+                setTimeout(() => {
+                    progressBar.style.width = "0%";
+                    progressContainer.style.display = 'none';
+                    statusText.innerText = "SECURE TUNNEL READY";
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>
+
