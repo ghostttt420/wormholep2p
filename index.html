@@ -3,203 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NetLink 95</title>
+    <title>NetLink 95 // Secure P2P</title>
+    
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23444'/><rect x='20' y='20' width='60' height='40' fill='%23fff'/><rect x='30' y='20' width='40' height='40' fill='%23444'/></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23333'/><rect x='20' y='20' width='60' height='60' fill='%23008080'/><path d='M30 50 L50 70 L70 30' stroke='white' stroke-width='10' fill='none'/></svg>">
 
     <style>
         :root {
-            --bg-color: #202020;
-            --window-bg: #353535;
-            --text-color: #e0e0e0;
-            --button-face: #454545;
-            --border-light: #606060;
-            --border-dark: #151515;
-            --accent: #008080; /* Windows 95 Teal, but darker */
+            --bg-dark: #121212;
+            --panel-bg: #2d2d2d;
+            --text-main: #e0e0e0;
+            --text-dim: #a0a0a0;
+            --accent: #008080; /* Teal */
+            --border-light: #505050;
+            --border-dark: #1a1a1a;
+            --font-stack: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: var(--accent);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Standard OS font */
+            background-color: var(--bg-dark);
+            /* Subtle grid pattern for "Tech" feel */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text-main);
+            font-family: var(--font-stack);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
         }
 
-        /* RETRO WINDOW STYLE */
-        #main-window {
-            width: 90%;
-            max-width: 450px;
-            background: var(--window-bg);
-            border: 2px solid;
-            border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
-            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
-            padding: 4px; /* Space for the inner bevel */
-        }
-
-        /* TITLE BAR */
-        .title-bar {
-            background: linear-gradient(90deg, #000080, #1084d0);
-            padding: 6px 10px;
+        /* --- NAVBAR --- */
+        .navbar {
+            background: var(--panel-bg);
+            border-bottom: 2px solid var(--border-dark);
+            padding: 15px 20px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            color: white;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .brand {
             font-weight: bold;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+        .brand-dot {
+            width: 12px; height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .tool-card {
+            width: 100%;
+            max-width: 500px;
+            background: var(--panel-bg);
+            /* Classic 3D Border */
+            border: 2px solid;
+            border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
+            padding: 2px; /* Inner bezel spacing */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .card-inner {
+            border: 2px solid;
+            border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); /* Inset look */
+            padding: 20px;
+            background: #252525;
+        }
+
+        /* --- UI ELEMENTS --- */
+        h2 { margin: 0 0 15px 0; font-size: 1.1rem; color: white; border-bottom: 1px solid var(--border-light); padding-bottom: 10px; }
+
+        .status-box {
+            background: #1a1a1a;
+            border: 1px solid var(--border-dark);
+            padding: 10px;
+            font-family: monospace;
             font-size: 0.9rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-        }
-        .title-controls div {
-            width: 14px; height: 14px;
-            background: #c0c0c0;
-            border: 1px solid white;
-            display: inline-block;
-            margin-left: 4px;
+            color: var(--accent);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* CONTENT AREA */
-        .content {
-            padding: 15px;
-            text-align: center;
-        }
-
-        /* RETRO BUTTONS */
+        /* Buttons & Inputs */
         button {
-            background: var(--button-face);
+            background: #3a3a3a;
             color: white;
             border: 2px solid;
             border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
-            padding: 8px 15px;
-            font-size: 0.9rem;
-            cursor: pointer;
+            padding: 8px 16px;
             font-family: inherit;
-            margin-top: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
         }
         button:active {
             border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
             transform: translateY(1px);
         }
-
-        /* INPUT BOXES */
-        input[type="text"] {
-            background: #1a1a1a;
-            color: white;
-            border: 2px solid;
-            border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
-            padding: 5px;
-            font-family: monospace;
-            width: 70%;
-        }
-
-        /* STATUS BAR */
-        .status-bar {
-            margin-top: 15px;
-            border: 2px solid;
-            border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
-            background: #252525;
-            padding: 8px;
-            font-size: 0.85rem;
-            text-align: left;
-            display: flex;
-            align-items: center;
-        }
-        .status-light {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: #555;
-            margin-right: 10px;
-            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5);
-        }
-        .connected { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
-
-        /* DROP ZONE */
-        #drop-zone {
-            margin-top: 20px;
-            border: 2px dashed #666;
-            background: #2a2a2a;
-            padding: 30px;
-            cursor: pointer;
-            display: none;
-        }
-        #drop-zone:hover { background: #333; border-color: #999; }
         
-        #progress-bar-container {
-            margin-top: 15px;
-            height: 20px;
-            background: #1a1a1a;
-            border: 2px solid;
-            border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+        input[type="text"] {
+            background: #151515;
+            border: 1px solid var(--border-light);
+            color: var(--accent);
+            padding: 8px;
+            font-family: monospace;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* --- HOST PANEL & QR --- */
+        #host-panel { display: none; text-align: center; }
+        #qr-box { 
+            background: white; 
+            padding: 10px; 
+            display: inline-block; 
+            margin: 15px 0;
+            border: 2px solid #000;
+        }
+
+        /* --- DROP ZONE --- */
+        #drop-zone {
             display: none;
-            position: relative;
+            border: 2px dashed #555;
+            background: rgba(0,0,0,0.2);
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #drop-zone:hover {
+            background: rgba(0, 128, 128, 0.1);
+            border-color: var(--accent);
+        }
+        .icon-upload { width: 48px; height: 48px; opacity: 0.7; margin-bottom: 10px; fill: white; }
+
+        /* --- PROGRESS BAR --- */
+        #progress-container {
+            display: none;
+            margin-top: 20px;
+            height: 15px;
+            background: #111;
+            border: 1px solid #555;
         }
         #progress-bar {
-            height: 100%;
-            background: #000080;
             width: 0%;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.2s;
         }
 
-        /* HIDE QR initially */
-        #host-panel { display: none; margin-top: 15px; }
-        #qr-box { background: white; padding: 10px; display: inline-block; margin-bottom: 10px; border: 2px solid #000; }
+        /* --- FOOTER --- */
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            background: var(--panel-bg);
+            border-top: 2px solid var(--border-dark);
+        }
     </style>
 </head>
 <body>
 
-    <div id="main-window">
-        <div class="title-bar">
-            <span>NetLink 95 - File Transfer</span>
-            <div class="title-controls"><div></div><div></div></div>
+    <nav class="navbar">
+        <div class="brand">
+            <div class="brand-dot"></div>
+            <span>NETLINK 95</span>
         </div>
+        <div style="font-size: 0.8rem; color: var(--text-dim);">P2P ENCRYPTED</div>
+    </nav>
 
-        <div class="content">
-            
-            <div class="status-bar">
-                <div id="status-light" class="status-light"></div>
-                <span id="status-text">Initializing System...</span>
-            </div>
-
-            <div id="host-panel">
-                <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #aaa;">Scan to Connect Device:</p>
-                <div id="qr-box"></div>
+    <main class="main-content">
+        <div class="tool-card">
+            <div class="card-inner">
                 
-                <div style="display: flex; justify-content: center; gap: 5px; margin-top: 10px;">
-                    <input type="text" id="link-box" readonly>
-                    <button onclick="copyLink()">Copy</button>
+                <h2>Session Manager</h2>
+                
+                <div class="status-box">
+                    <span id="status-text">INITIALIZING NETWORK...</span>
                 </div>
-            </div>
 
-            <div id="drop-zone" onclick="document.getElementById('file-input').click()">
-                <img src="data:image/svg+xml,<svg fill='white' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/></svg>" style="width: 40px; height: 40px; opacity: 0.5;">
-                <p style="margin-top: 10px;">Click to Select File<br><span style="font-size: 0.8rem; color: #888;">(Or Drag & Drop)</span></p>
-                <input type="file" id="file-input" style="display: none;">
-            </div>
+                <div id="host-panel">
+                    <p style="color: var(--text-dim); margin-bottom: 10px;">Scan or Share Link to Pair Devices</p>
+                    
+                    <div id="qr-box"></div>
+                    
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="link-box" readonly>
+                        <button onclick="copyLink()">COPY</button>
+                    </div>
+                </div>
 
-            <div id="progress-bar-container">
-                <div id="progress-bar"></div>
-            </div>
+                <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <svg class="icon-upload" viewBox="0 0 24 24">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                    </svg>
+                    <p><strong>Click to Upload</strong><br><span style="font-size: 0.8rem; color: var(--text-dim);">or Drag & Drop File Here</span></p>
+                    <input type="file" id="file-input" style="display: none;">
+                </div>
 
+                <div id="progress-container">
+                    <div id="progress-bar"></div>
+                </div>
+
+            </div>
         </div>
-    </div>
+    </main>
+
+    <footer>
+        SECURE PEER-TO-PEER DATA TUNNEL // V2.0
+    </footer>
 
     <script>
         const peer = new Peer();
         let conn = null;
         
-        // UI Elements
+        // UI References
         const statusText = document.getElementById('status-text');
-        const statusLight = document.getElementById('status-light');
         const dropZone = document.getElementById('drop-zone');
         const hostPanel = document.getElementById('host-panel');
-        const progressBar = document.getElementById('progress-bar');
-        const progressContainer = document.getElementById('progress-bar-container');
         const linkBox = document.getElementById('link-box');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
 
         const urlParams = new URLSearchParams(window.location.search);
         const targetId = urlParams.get('join');
@@ -207,24 +252,19 @@
         // --- PEERJS EVENTS ---
         peer.on('open', (id) => {
             if (targetId) {
-                // CLIENT MODE
-                statusText.innerText = "Dialing Host...";
+                // Client Mode
+                statusText.innerText = "DIALING HOST...";
                 connectToPeer(targetId);
             } else {
-                // HOST MODE
-                statusText.innerText = "Waiting for Connection...";
+                // Host Mode
+                statusText.innerText = "WAITING FOR CONNECTION...";
                 hostPanel.style.display = "block";
                 generateConnectionInfo(id);
             }
         });
 
-        peer.on('connection', (connection) => {
-            handleConnection(connection);
-        });
-
-        peer.on('error', (err) => {
-            statusText.innerText = "Error: " + err.type;
-        });
+        peer.on('connection', (connection) => handleConnection(connection));
+        peer.on('error', (err) => statusText.innerText = "ERROR: " + err.type);
 
         // --- LOGIC ---
         function connectToPeer(id) {
@@ -234,15 +274,16 @@
 
         function handleConnection(connection) {
             conn = connection;
-            statusText.innerText = "Connected: Secure Pipe Ready";
-            statusLight.classList.add('connected');
+            statusText.innerText = "CONNECTED: SECURE TUNNEL ACTIVE";
+            statusText.style.color = "#00ff00";
+            
             hostPanel.style.display = 'none'; 
             dropZone.style.display = 'block'; 
 
             conn.on('data', handleIncomingData);
             conn.on('close', () => {
-                statusText.innerText = "Connection Terminated";
-                statusLight.classList.remove('connected');
+                statusText.innerText = "CONNECTION TERMINATED";
+                statusText.style.color = "red";
             });
         }
 
@@ -252,16 +293,16 @@
             
             const qrContainer = document.getElementById('qr-box');
             qrContainer.innerHTML = "";
-            new QRCode(qrContainer, { text: link, width: 120, height: 120 });
+            new QRCode(qrContainer, { text: link, width: 140, height: 140 });
         }
 
         function copyLink() {
             linkBox.select();
             linkBox.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(linkBox.value).then(() => {
-                const original = statusText.innerText;
-                statusText.innerText = "Link Copied to Clipboard!";
-                setTimeout(() => statusText.innerText = original, 2000);
+                const btn = document.querySelector('button');
+                btn.innerText = "COPIED!";
+                setTimeout(() => btn.innerText = "COPY", 2000);
             });
         }
 
@@ -271,7 +312,7 @@
             const file = e.target.files[0];
             if (!file || !conn) return;
 
-            statusText.innerText = "Sending: " + file.name;
+            statusText.innerText = "SENDING: " + file.name;
             progressContainer.style.display = 'block';
 
             const CHUNK_SIZE = 16384; 
@@ -287,7 +328,7 @@
                     readSlice(offset);
                 } else {
                     conn.send({ file: file.name, type: 'end' });
-                    statusText.innerText = "Transfer Complete";
+                    statusText.innerText = "TRANSFER COMPLETE";
                     setTimeout(() => {
                         progressBar.style.width = "0%";
                         progressContainer.style.display = 'none';
@@ -312,16 +353,14 @@
             if (data.type === 'start') {
                 receivedChunks = [];
                 currentFileName = data.file;
-                statusText.innerText = "Receiving: " + currentFileName;
+                statusText.innerText = "RECEIVING: " + currentFileName;
                 progressContainer.style.display = 'block';
                 progressBar.style.width = "0%";
             } else if (data.type === 'data') {
                 receivedChunks.push(data.data);
-                // Simple progress visualization for receiver
-                // (Note: To get perfect % on receive, we'd need to track total size from 'start')
-                progressBar.style.width = "50%"; 
+                progressBar.style.width = "50%"; // Estimated progress
             } else if (data.type === 'end') {
-                statusText.innerText = "Saving File...";
+                statusText.innerText = "SAVING FILE...";
                 progressBar.style.width = "100%";
                 
                 const blob = new Blob(receivedChunks);
@@ -335,7 +374,7 @@
 
                 setTimeout(() => {
                     progressContainer.style.display = 'none';
-                    statusText.innerText = "Ready for Next File";
+                    statusText.innerText = "READY FOR NEXT FILE";
                 }, 2000);
             }
         }
