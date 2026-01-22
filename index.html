@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NetLink 95 // Heavy Duty</title>
+    <title>NetLink 95 // Stable</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -97,7 +97,7 @@
             color: var(--accent);
             margin-bottom: 20px;
             display: flex;
-            justify-content: space-between; /* Space for Speedometer */
+            justify-content: space-between;
             align-items: center;
         }
         .status-text-group { display: flex; align-items: center; gap: 10px; }
@@ -214,23 +214,19 @@
         <div class="faq-section">
             <div class="faq-item">
                 <div class="faq-q">/// HOW DOES THIS WORK?</div>
-                <div class="faq-a">NetLink 95 uses <strong>WebRTC</strong> technology to create a direct data pipe between two devices. Unlike cloud storage (Google Drive, Dropbox), your file is never uploaded to a server. It streams directly from your device to the recipient's device.</div>
+                <div class="faq-a">NetLink 95 uses <strong>WebRTC</strong> to stream files directly between devices. No middleman servers are used to store your data.</div>
             </div>
             <div class="faq-item">
                 <div class="faq-q">/// IS IT PRIVATE?</div>
-                <div class="faq-a">Yes. The connection is <strong>End-to-End Encrypted</strong>. Since there is no middleman server storing your file, nobody—including us—can see what you are sending.</div>
-            </div>
-            <div class="faq-item">
-                <div class="faq-q">/// DO I NEED INTERNET?</div>
-                <div class="faq-a">You need a brief internet connection to "handshake" (find the other device). Once connected, if both devices are on the same WiFi, data transfers locally. If on different networks, it uses the internet.</div>
+                <div class="faq-a">Yes. The connection is <strong>End-to-End Encrypted</strong>. Since there is no server storing your file, nobody—including us—can see what you are sending.</div>
             </div>
             <div class="faq-item">
                 <div class="faq-q">/// HOW TO SEND HUGE FILES?</div>
-                <div class="faq-a">NetLink 95 v3.0 uses <strong>Flow Control</strong>. If your network is slow, the transfer pauses automatically to prevent crashing. You can send files of any size, as long as the receiver has enough RAM to hold it before saving.</div>
+                <div class="faq-a">We use smart <strong>Flow Control</strong>. If your network is slow, the transfer pauses automatically to prevent crashing, allowing you to send large files safely.</div>
             </div>
             <div class="faq-item">
-                <div class="faq-q">/// IS IT FAST?</div>
-                <div class="faq-a">If both devices are on the same WiFi, speeds can reach <strong>100MB/s+</strong>. It uses your local router, not the internet.</div>
+                <div class="faq-q">/// TROUBLESHOOTING</div>
+                <div class="faq-a">Ensure both devices are online. Do not close this tab or lock your phone while sending. If a transfer fails, refresh and reconnect.</div>
             </div>
         </div>
     </main>
@@ -307,7 +303,7 @@
             });
         }
 
-        // --- HEAVY DUTY TRANSFER LOGIC ---
+        // --- ROBUST FILE TRANSFER LOGIC ---
         const fileInput = document.getElementById('file-input');
         
         fileInput.addEventListener('change', (e) => {
@@ -324,42 +320,54 @@
             let lastTime = Date.now();
             let bytesSinceLastTime = 0;
 
-            // BACKPRESSURE LOGIC
-            const MAX_BUFFERED_AMOUNT = 64 * 1024; // 64KB Limit
+            const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
             reader.onload = (event) => {
-                conn.send({ file: file.name, type: 'data', data: event.target.result });
-                
-                offset += event.target.result.byteLength;
-                bytesSinceLastTime += event.target.result.byteLength;
+                try {
+                    conn.send({ file: file.name, type: 'data', data: event.target.result });
+                    
+                    offset += event.target.result.byteLength;
+                    bytesSinceLastTime += event.target.result.byteLength;
 
-                // Speed Calc
-                const now = Date.now();
-                if (now - lastTime >= 1000) {
-                    const speed = (bytesSinceLastTime / 1024 / 1024).toFixed(2);
-                    speedIndicator.innerText = speed + " MB/s";
-                    lastTime = now;
-                    bytesSinceLastTime = 0;
-                }
-
-                progressBar.style.width = ((offset / file.size) * 100) + "%";
-
-                if (offset < file.size) {
-                    // FLOW CONTROL: Check buffer
-                    if (conn.dataChannel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-                        setTimeout(() => readSlice(offset), 50); // Wait for buffer to clear
-                    } else {
-                        readSlice(offset); // Send immediately
+                    // Speed Calc
+                    const now = Date.now();
+                    if (now - lastTime >= 1000) {
+                        const speed = (bytesSinceLastTime / 1024 / 1024).toFixed(2);
+                        speedIndicator.innerText = speed + " MB/s";
+                        lastTime = now;
+                        bytesSinceLastTime = 0;
                     }
-                } else {
-                    conn.send({ file: file.name, type: 'end' });
-                    statusText.innerText = "COMPLETE";
-                    speedIndicator.innerText = "DONE";
-                    setTimeout(() => {
-                        progressBar.style.width = "0%";
-                        progressContainer.style.display = 'none';
-                        speedIndicator.style.display = 'none';
-                    }, 2000);
+
+                    progressBar.style.width = ((offset / file.size) * 100) + "%";
+
+                    if (offset < file.size) {
+                        // --- BUG FIX: SAFE BUFFER CHECK ---
+                        // Only check backpressure if the browser supports it.
+                        // If 'conn.dataChannel' is undefined, we assume 0 (Blast Mode).
+                        let buffered = 0;
+                        if (conn.dataChannel) {
+                            buffered = conn.dataChannel.bufferedAmount || 0;
+                        }
+
+                        if (buffered > MAX_BUFFERED_AMOUNT) {
+                            setTimeout(() => readSlice(offset), 50); // Pause
+                        } else {
+                            readSlice(offset); // Go fast
+                        }
+                    } else {
+                        conn.send({ file: file.name, type: 'end' });
+                        statusText.innerText = "COMPLETE";
+                        speedIndicator.innerText = "DONE";
+                        setTimeout(() => {
+                            progressBar.style.width = "0%";
+                            progressContainer.style.display = 'none';
+                            speedIndicator.style.display = 'none';
+                        }, 2000);
+                    }
+                } catch (err) {
+                    console.error("Transfer Error:", err);
+                    statusText.innerText = "TRANSFER ERROR";
+                    statusText.style.color = "red";
                 }
             };
 
@@ -385,7 +393,7 @@
                 progressBar.style.width = "0%";
             } else if (data.type === 'data') {
                 receivedChunks.push(data.data);
-                progressBar.style.width = "50%"; // Generic progress for receiver
+                progressBar.style.width = "50%"; 
             } else if (data.type === 'end') {
                 statusText.innerText = "SAVING...";
                 progressBar.style.width = "100%";
@@ -402,7 +410,7 @@
                 setTimeout(() => {
                     progressContainer.style.display = 'none';
                     statusText.innerText = "READY";
-                    receivedChunks = []; // Free RAM
+                    receivedChunks = [];
                 }, 2000);
             }
         }
