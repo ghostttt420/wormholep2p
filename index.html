@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NetLink 95 // Secure P2P</title>
+    <title>NetLink 95 // Heavy Duty</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -24,7 +24,6 @@
 
         body {
             background-color: var(--bg-dark);
-            /* Tech Grid Background */
             background-image: 
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
@@ -57,14 +56,7 @@
             color: white;
             font-size: 1.1rem;
         }
-        /* LOGO SVG STYLE */
-        .logo-icon {
-            width: 28px; 
-            height: 28px; 
-            fill: none; 
-            stroke: var(--accent); 
-            stroke-width: 2;
-        }
+        .logo-icon { width: 28px; height: 28px; fill: none; stroke: var(--accent); stroke-width: 2; }
 
         /* --- MAIN LAYOUT --- */
         .main-content {
@@ -80,7 +72,6 @@
             width: 100%;
             max-width: 500px;
             background: var(--panel-bg);
-            /* Classic 3D Border */
             border: 2px solid;
             border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
             padding: 2px;
@@ -106,11 +97,14 @@
             color: var(--accent);
             margin-bottom: 20px;
             display: flex;
+            justify-content: space-between; /* Space for Speedometer */
             align-items: center;
-            gap: 10px;
         }
+        .status-text-group { display: flex; align-items: center; gap: 10px; }
         .status-dot { width: 8px; height: 8px; background: #555; border-radius: 50%; }
         .status-dot.active { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+        
+        #speed-indicator { color: #fff; display: none; }
 
         /* Buttons & Inputs */
         button {
@@ -140,17 +134,10 @@
             box-sizing: border-box;
         }
 
-        /* --- HOST PANEL --- */
+        /* --- PANELS --- */
         #host-panel { display: none; text-align: center; }
-        #qr-box { 
-            background: white; 
-            padding: 10px; 
-            display: inline-block; 
-            margin: 20px 0;
-            border: 4px solid #111;
-        }
+        #qr-box { background: white; padding: 10px; display: inline-block; margin: 20px 0; border: 4px solid #111; }
 
-        /* --- DROP ZONE --- */
         #drop-zone {
             display: none;
             border: 2px dashed #444;
@@ -160,13 +147,9 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        #drop-zone:hover {
-            background: rgba(0, 128, 128, 0.1);
-            border-color: var(--accent);
-        }
+        #drop-zone:hover { background: rgba(0, 128, 128, 0.1); border-color: var(--accent); }
         .icon-upload { width: 48px; height: 48px; opacity: 0.7; margin-bottom: 15px; fill: white; }
 
-        /* --- PROGRESS --- */
         #progress-container {
             display: none;
             margin-top: 20px;
@@ -174,65 +157,42 @@
             background: #111;
             border: 1px solid #555;
         }
-        #progress-bar {
-            width: 0%;
-            height: 100%;
-            background: var(--accent);
-            transition: width 0.2s;
-        }
+        #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
 
-        /* --- FAQ SECTION --- */
-        .faq-section {
-            width: 100%;
-            max-width: 600px;
-            border-top: 1px solid var(--border-light);
-            padding-top: 30px;
-        }
+        .faq-section { width: 100%; max-width: 600px; border-top: 1px solid var(--border-light); padding-top: 30px; }
         .faq-item { margin-bottom: 20px; }
         .faq-q { color: white; font-weight: bold; margin-bottom: 5px; font-size: 0.95rem; }
         .faq-a { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
 
-        /* --- FOOTER --- */
-        footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            background: var(--panel-bg);
-            border-top: 2px solid var(--border-dark);
-        }
+        footer { text-align: center; padding: 20px; font-size: 0.8rem; color: var(--text-dim); background: var(--panel-bg); border-top: 2px solid var(--border-dark); }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
         <div class="brand">
-            <svg class="logo-icon" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
+            <svg class="logo-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             <span>NETLINK 95</span>
         </div>
-        <div style="font-size: 0.8rem; color: var(--text-dim);">ENCRYPTED P2P TUNNEL</div>
+        <div style="font-size: 0.8rem; color: var(--text-dim);">ENCRYPTED P2P</div>
     </nav>
 
     <main class="main-content">
-        
         <div class="tool-card">
             <div class="card-inner">
-                
-                <h2>Connection Manager</h2>
+                <h2>Transfer Control</h2>
                 
                 <div class="status-box">
-                    <div id="status-dot" class="status-dot"></div>
-                    <span id="status-text">INITIALIZING NETWORK...</span>
+                    <div class="status-text-group">
+                        <div id="status-dot" class="status-dot"></div>
+                        <span id="status-text">INITIALIZING...</span>
+                    </div>
+                    <span id="speed-indicator">0 MB/s</span>
                 </div>
 
                 <div id="host-panel">
-                    <p style="color: var(--text-dim); margin-bottom: 10px;">Scan or Share Link to Pair Devices</p>
-                    
+                    <p style="color: var(--text-dim); margin-bottom: 10px;">Scan or Share Link</p>
                     <div id="qr-box"></div>
-                    
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="link-box" readonly>
                         <button onclick="copyLink()">COPY</button>
@@ -240,17 +200,14 @@
                 </div>
 
                 <div id="drop-zone" onclick="document.getElementById('file-input').click()">
-                    <svg class="icon-upload" viewBox="0 0 24 24">
-                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
-                    </svg>
-                    <p><strong>Click to Send File</strong><br><span style="font-size: 0.8rem; color: var(--text-dim);">Secure Direct Transfer</span></p>
+                    <svg class="icon-upload" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                    <p><strong>Click to Send File</strong><br><span style="font-size: 0.8rem; color: var(--text-dim);">Unlimited Size / Direct Stream</span></p>
                     <input type="file" id="file-input" style="display: none;">
                 </div>
 
                 <div id="progress-container">
                     <div id="progress-bar"></div>
                 </div>
-
             </div>
         </div>
 
@@ -267,19 +224,23 @@
                 <div class="faq-q">/// DO I NEED INTERNET?</div>
                 <div class="faq-a">You need a brief internet connection to "handshake" (find the other device). Once connected, if both devices are on the same WiFi, data transfers locally. If on different networks, it uses the internet.</div>
             </div>
+            <div class="faq-item">
+                <div class="faq-q">/// HOW TO SEND HUGE FILES?</div>
+                <div class="faq-a">NetLink 95 v3.0 uses <strong>Flow Control</strong>. If your network is slow, the transfer pauses automatically to prevent crashing. You can send files of any size, as long as the receiver has enough RAM to hold it before saving.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">/// IS IT FAST?</div>
+                <div class="faq-a">If both devices are on the same WiFi, speeds can reach <strong>100MB/s+</strong>. It uses your local router, not the internet.</div>
+            </div>
         </div>
-
     </main>
 
-    <footer>
-        &copy; 2026 NETLINK SYSTEMS. NO LOGS. NO SERVERS.
-    </footer>
+    <footer>&copy; 2026 NETLINK SYSTEMS. NO LOGS. NO SERVERS.</footer>
 
     <script>
         const peer = new Peer();
         let conn = null;
         
-        // UI References
         const statusText = document.getElementById('status-text');
         const statusDot = document.getElementById('status-dot');
         const dropZone = document.getElementById('drop-zone');
@@ -287,6 +248,7 @@
         const linkBox = document.getElementById('link-box');
         const progressBar = document.getElementById('progress-bar');
         const progressContainer = document.getElementById('progress-container');
+        const speedIndicator = document.getElementById('speed-indicator');
 
         const urlParams = new URLSearchParams(window.location.search);
         const targetId = urlParams.get('join');
@@ -306,7 +268,6 @@
         peer.on('connection', (connection) => handleConnection(connection));
         peer.on('error', (err) => statusText.innerText = "ERROR: " + err.type);
 
-        // --- CONNECT LOGIC ---
         function connectToPeer(id) {
             conn = peer.connect(id);
             conn.on('open', () => handleConnection(conn));
@@ -314,16 +275,15 @@
 
         function handleConnection(connection) {
             conn = connection;
-            statusText.innerText = "SECURE TUNNEL ACTIVE";
+            statusText.innerText = "TUNNEL ACTIVE";
             statusText.style.color = "#00ff00";
             statusDot.classList.add('active');
-            
             hostPanel.style.display = 'none'; 
             dropZone.style.display = 'block'; 
 
             conn.on('data', handleIncomingData);
             conn.on('close', () => {
-                statusText.innerText = "CONNECTION TERMINATED";
+                statusText.innerText = "DISCONNECTED";
                 statusText.style.color = "red";
                 statusDot.classList.remove('active');
             });
@@ -332,7 +292,6 @@
         function generateConnectionInfo(id) {
             const link = window.location.href.split('?')[0] + "?join=" + id;
             linkBox.value = link;
-            
             const qrContainer = document.getElementById('qr-box');
             qrContainer.innerHTML = "";
             new QRCode(qrContainer, { text: link, width: 140, height: 140 });
@@ -348,32 +307,58 @@
             });
         }
 
-        // --- SEND LOGIC ---
+        // --- HEAVY DUTY TRANSFER LOGIC ---
         const fileInput = document.getElementById('file-input');
+        
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file || !conn) return;
 
             statusText.innerText = "SENDING: " + file.name;
             progressContainer.style.display = 'block';
+            speedIndicator.style.display = 'block';
 
             const CHUNK_SIZE = 16384; 
             const reader = new FileReader();
             let offset = 0;
+            let lastTime = Date.now();
+            let bytesSinceLastTime = 0;
+
+            // BACKPRESSURE LOGIC
+            const MAX_BUFFERED_AMOUNT = 64 * 1024; // 64KB Limit
 
             reader.onload = (event) => {
                 conn.send({ file: file.name, type: 'data', data: event.target.result });
+                
                 offset += event.target.result.byteLength;
+                bytesSinceLastTime += event.target.result.byteLength;
+
+                // Speed Calc
+                const now = Date.now();
+                if (now - lastTime >= 1000) {
+                    const speed = (bytesSinceLastTime / 1024 / 1024).toFixed(2);
+                    speedIndicator.innerText = speed + " MB/s";
+                    lastTime = now;
+                    bytesSinceLastTime = 0;
+                }
+
                 progressBar.style.width = ((offset / file.size) * 100) + "%";
 
                 if (offset < file.size) {
-                    readSlice(offset);
+                    // FLOW CONTROL: Check buffer
+                    if (conn.dataChannel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+                        setTimeout(() => readSlice(offset), 50); // Wait for buffer to clear
+                    } else {
+                        readSlice(offset); // Send immediately
+                    }
                 } else {
                     conn.send({ file: file.name, type: 'end' });
-                    statusText.innerText = "TRANSFER COMPLETE";
+                    statusText.innerText = "COMPLETE";
+                    speedIndicator.innerText = "DONE";
                     setTimeout(() => {
                         progressBar.style.width = "0%";
                         progressContainer.style.display = 'none';
+                        speedIndicator.style.display = 'none';
                     }, 2000);
                 }
             };
@@ -400,9 +385,9 @@
                 progressBar.style.width = "0%";
             } else if (data.type === 'data') {
                 receivedChunks.push(data.data);
-                progressBar.style.width = "50%";
+                progressBar.style.width = "50%"; // Generic progress for receiver
             } else if (data.type === 'end') {
-                statusText.innerText = "SAVING FILE...";
+                statusText.innerText = "SAVING...";
                 progressBar.style.width = "100%";
                 
                 const blob = new Blob(receivedChunks);
@@ -416,7 +401,8 @@
 
                 setTimeout(() => {
                     progressContainer.style.display = 'none';
-                    statusText.innerText = "READY FOR NEXT FILE";
+                    statusText.innerText = "READY";
+                    receivedChunks = []; // Free RAM
                 }, 2000);
             }
         }
