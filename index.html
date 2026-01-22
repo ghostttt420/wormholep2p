@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23333'/><rect x='20' y='20' width='60' height='60' fill='%23008080'/><path d='M30 50 L50 70 L70 30' stroke='white' stroke-width='10' fill='none'/></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23222'/><circle cx='50' cy='50' r='35' stroke='%23008080' stroke-width='8' fill='none'/><path d='M20 50 L80 50 M50 20 L50 80' stroke='%23008080' stroke-width='4'/></svg>">
 
     <style>
         :root {
@@ -24,11 +24,11 @@
 
         body {
             background-color: var(--bg-dark);
-            /* Subtle grid pattern for "Tech" feel */
+            /* Tech Grid Background */
             background-image: 
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-size: 30px 30px;
             color: var(--text-main);
             font-family: var(--font-stack);
             display: flex;
@@ -41,34 +41,39 @@
         .navbar {
             background: var(--panel-bg);
             border-bottom: 2px solid var(--border-dark);
-            padding: 15px 20px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 10;
         }
         .brand {
             font-weight: bold;
             letter-spacing: 1px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             color: white;
+            font-size: 1.1rem;
         }
-        .brand-dot {
-            width: 12px; height: 12px;
-            background: var(--accent);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent);
+        /* LOGO SVG STYLE */
+        .logo-icon {
+            width: 28px; 
+            height: 28px; 
+            fill: none; 
+            stroke: var(--accent); 
+            stroke-width: 2;
         }
 
-        /* --- MAIN CONTAINER --- */
+        /* --- MAIN LAYOUT --- */
         .main-content {
             flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            padding: 40px 20px;
+            gap: 40px;
         }
 
         .tool-card {
@@ -78,24 +83,24 @@
             /* Classic 3D Border */
             border: 2px solid;
             border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
-            padding: 2px; /* Inner bezel spacing */
+            padding: 2px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .card-inner {
             border: 2px solid;
-            border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); /* Inset look */
-            padding: 20px;
-            background: #252525;
+            border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+            padding: 25px;
+            background: #222;
         }
 
         /* --- UI ELEMENTS --- */
         h2 { margin: 0 0 15px 0; font-size: 1.1rem; color: white; border-bottom: 1px solid var(--border-light); padding-bottom: 10px; }
 
         .status-box {
-            background: #1a1a1a;
+            background: #151515;
             border: 1px solid var(--border-dark);
-            padding: 10px;
+            padding: 12px;
             font-family: monospace;
             font-size: 0.9rem;
             color: var(--accent);
@@ -104,6 +109,8 @@
             align-items: center;
             gap: 10px;
         }
+        .status-dot { width: 8px; height: 8px; background: #555; border-radius: 50%; }
+        .status-dot.active { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
 
         /* Buttons & Inputs */
         button {
@@ -111,40 +118,42 @@
             color: white;
             border: 2px solid;
             border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
-            padding: 8px 16px;
+            padding: 10px 20px;
             font-family: inherit;
             cursor: pointer;
             font-size: 0.9rem;
+            transition: background 0.1s;
         }
+        button:hover { background: #444; }
         button:active {
             border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
             transform: translateY(1px);
         }
         
         input[type="text"] {
-            background: #151515;
+            background: #111;
             border: 1px solid var(--border-light);
             color: var(--accent);
-            padding: 8px;
+            padding: 10px;
             font-family: monospace;
             width: 100%;
             box-sizing: border-box;
         }
 
-        /* --- HOST PANEL & QR --- */
+        /* --- HOST PANEL --- */
         #host-panel { display: none; text-align: center; }
         #qr-box { 
             background: white; 
             padding: 10px; 
             display: inline-block; 
-            margin: 15px 0;
-            border: 2px solid #000;
+            margin: 20px 0;
+            border: 4px solid #111;
         }
 
         /* --- DROP ZONE --- */
         #drop-zone {
             display: none;
-            border: 2px dashed #555;
+            border: 2px dashed #444;
             background: rgba(0,0,0,0.2);
             padding: 40px;
             text-align: center;
@@ -155,9 +164,9 @@
             background: rgba(0, 128, 128, 0.1);
             border-color: var(--accent);
         }
-        .icon-upload { width: 48px; height: 48px; opacity: 0.7; margin-bottom: 10px; fill: white; }
+        .icon-upload { width: 48px; height: 48px; opacity: 0.7; margin-bottom: 15px; fill: white; }
 
-        /* --- PROGRESS BAR --- */
+        /* --- PROGRESS --- */
         #progress-container {
             display: none;
             margin-top: 20px;
@@ -172,10 +181,21 @@
             transition: width 0.2s;
         }
 
+        /* --- FAQ SECTION --- */
+        .faq-section {
+            width: 100%;
+            max-width: 600px;
+            border-top: 1px solid var(--border-light);
+            padding-top: 30px;
+        }
+        .faq-item { margin-bottom: 20px; }
+        .faq-q { color: white; font-weight: bold; margin-bottom: 5px; font-size: 0.95rem; }
+        .faq-a { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
+
         /* --- FOOTER --- */
         footer {
             text-align: center;
-            padding: 15px;
+            padding: 20px;
             font-size: 0.8rem;
             color: var(--text-dim);
             background: var(--panel-bg);
@@ -187,19 +207,24 @@
 
     <nav class="navbar">
         <div class="brand">
-            <div class="brand-dot"></div>
+            <svg class="logo-icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
             <span>NETLINK 95</span>
         </div>
-        <div style="font-size: 0.8rem; color: var(--text-dim);">P2P ENCRYPTED</div>
+        <div style="font-size: 0.8rem; color: var(--text-dim);">ENCRYPTED P2P TUNNEL</div>
     </nav>
 
     <main class="main-content">
+        
         <div class="tool-card">
             <div class="card-inner">
                 
-                <h2>Session Manager</h2>
+                <h2>Connection Manager</h2>
                 
                 <div class="status-box">
+                    <div id="status-dot" class="status-dot"></div>
                     <span id="status-text">INITIALIZING NETWORK...</span>
                 </div>
 
@@ -208,7 +233,7 @@
                     
                     <div id="qr-box"></div>
                     
-                    <div style="display: flex; gap: 5px;">
+                    <div style="display: flex; gap: 8px;">
                         <input type="text" id="link-box" readonly>
                         <button onclick="copyLink()">COPY</button>
                     </div>
@@ -218,7 +243,7 @@
                     <svg class="icon-upload" viewBox="0 0 24 24">
                         <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
                     </svg>
-                    <p><strong>Click to Upload</strong><br><span style="font-size: 0.8rem; color: var(--text-dim);">or Drag & Drop File Here</span></p>
+                    <p><strong>Click to Send File</strong><br><span style="font-size: 0.8rem; color: var(--text-dim);">Secure Direct Transfer</span></p>
                     <input type="file" id="file-input" style="display: none;">
                 </div>
 
@@ -228,10 +253,26 @@
 
             </div>
         </div>
+
+        <div class="faq-section">
+            <div class="faq-item">
+                <div class="faq-q">/// HOW DOES THIS WORK?</div>
+                <div class="faq-a">NetLink 95 uses <strong>WebRTC</strong> technology to create a direct data pipe between two devices. Unlike cloud storage (Google Drive, Dropbox), your file is never uploaded to a server. It streams directly from your device to the recipient's device.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">/// IS IT PRIVATE?</div>
+                <div class="faq-a">Yes. The connection is <strong>End-to-End Encrypted</strong>. Since there is no middleman server storing your file, nobody—including us—can see what you are sending.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">/// DO I NEED INTERNET?</div>
+                <div class="faq-a">You need a brief internet connection to "handshake" (find the other device). Once connected, if both devices are on the same WiFi, data transfers locally. If on different networks, it uses the internet.</div>
+            </div>
+        </div>
+
     </main>
 
     <footer>
-        SECURE PEER-TO-PEER DATA TUNNEL // V2.0
+        &copy; 2026 NETLINK SYSTEMS. NO LOGS. NO SERVERS.
     </footer>
 
     <script>
@@ -240,6 +281,7 @@
         
         // UI References
         const statusText = document.getElementById('status-text');
+        const statusDot = document.getElementById('status-dot');
         const dropZone = document.getElementById('drop-zone');
         const hostPanel = document.getElementById('host-panel');
         const linkBox = document.getElementById('link-box');
@@ -252,11 +294,9 @@
         // --- PEERJS EVENTS ---
         peer.on('open', (id) => {
             if (targetId) {
-                // Client Mode
                 statusText.innerText = "DIALING HOST...";
                 connectToPeer(targetId);
             } else {
-                // Host Mode
                 statusText.innerText = "WAITING FOR CONNECTION...";
                 hostPanel.style.display = "block";
                 generateConnectionInfo(id);
@@ -266,7 +306,7 @@
         peer.on('connection', (connection) => handleConnection(connection));
         peer.on('error', (err) => statusText.innerText = "ERROR: " + err.type);
 
-        // --- LOGIC ---
+        // --- CONNECT LOGIC ---
         function connectToPeer(id) {
             conn = peer.connect(id);
             conn.on('open', () => handleConnection(conn));
@@ -274,8 +314,9 @@
 
         function handleConnection(connection) {
             conn = connection;
-            statusText.innerText = "CONNECTED: SECURE TUNNEL ACTIVE";
+            statusText.innerText = "SECURE TUNNEL ACTIVE";
             statusText.style.color = "#00ff00";
+            statusDot.classList.add('active');
             
             hostPanel.style.display = 'none'; 
             dropZone.style.display = 'block'; 
@@ -284,6 +325,7 @@
             conn.on('close', () => {
                 statusText.innerText = "CONNECTION TERMINATED";
                 statusText.style.color = "red";
+                statusDot.classList.remove('active');
             });
         }
 
@@ -306,7 +348,7 @@
             });
         }
 
-        // --- FILE TRANSFER ---
+        // --- SEND LOGIC ---
         const fileInput = document.getElementById('file-input');
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -345,7 +387,7 @@
             readSlice(0);
         });
 
-        // --- RECEIVE ---
+        // --- RECEIVE LOGIC ---
         let receivedChunks = [];
         let currentFileName = "";
 
@@ -358,7 +400,7 @@
                 progressBar.style.width = "0%";
             } else if (data.type === 'data') {
                 receivedChunks.push(data.data);
-                progressBar.style.width = "50%"; // Estimated progress
+                progressBar.style.width = "50%";
             } else if (data.type === 'end') {
                 statusText.innerText = "SAVING FILE...";
                 progressBar.style.width = "100%";
